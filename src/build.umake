@@ -1,0 +1,15 @@
+#include <umake/custom.hpp>
+
+void build_umake(Custom &custom) {
+	custom.add_library("boost_filesystem");
+	custom.add_library("boost_system");
+	custom.add_library("dl");
+}
+
+/*
+ * Local Variables:
+ * mode: c++
+ * coding: utf-8-unix
+ * tab-width: 4
+ * End:
+ */
