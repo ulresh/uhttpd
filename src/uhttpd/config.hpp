@@ -1,6 +1,8 @@
 #pragma once
 
-#include "stdlibs.hpp"
+#include <string>
+#include <boost/asio.hpp>
+using boost::asio::ip::tcp;
 
 struct Config {
 	tcp::endpoint listen_endpoint;
