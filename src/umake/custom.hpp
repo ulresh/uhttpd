@@ -3,6 +3,7 @@
 #include <list>
 #include <string>
 
+namespace umake {
 struct Custom {
 	void add_system_include_path(const std::string &s) {
 		system_include_pathes.push_back(s); }
@@ -17,6 +18,7 @@ struct Custom {
 	std::list<std::string> system_include_pathes,
 		include_pathes, libraries, library_files;
 };
+}
 
 /*
  * Local Variables:

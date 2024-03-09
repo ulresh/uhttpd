@@ -1,8 +1,9 @@
 #include <umake/custom.hpp>
 
-void build_umake(Custom &custom) {
+void build_umake(umake::Custom &custom) {
 	custom.libraries.clear();
 	custom.add_system_include_path("/usr/local/share/boost_1_84/include");
+	custom.add_include_path("src");
 }
 
 /*
