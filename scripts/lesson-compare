@@ -61,6 +61,7 @@ if(!$errors && $code) {
     if($prev_lesson_step) {
 	print "git merge lesson$prev_lesson_step\n";
     }
+    print "git push\ngit push origin --tags\n";
 }
 
 # Local Variables:
