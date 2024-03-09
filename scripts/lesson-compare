@@ -32,11 +32,11 @@ while(defined(my $line = <$lesson>)) {
     while($line =~ /\[(.*?)\]\(.*?\),\s*\[посмотреть\s+отличия\]\(\/..\/..\/compare\/(c\d\d\d[a-z]?)..(c\d\d\d[a-z])\)/g) {
 	my($file,$t1,$t2) = ($1,$2,$3);
 	# warn eval dw qw($file $t1 $t2);
-	my $s1 = substr $t1, 0, 3;
-	my $s2 = substr $t2, 0, 3;
-	my $c1 = substr $t1, 3;
-	my $c2 = substr $t2, 3;
-	my $next = $c1; if($next) { ++next; } else { $next = 'a'; }
+	my $s1 = substr $t1, 0, 4;
+	my $s2 = substr $t2, 0, 4;
+	my $c1 = substr $t1, 4;
+	my $c2 = substr $t2, 4;
+	my $next = $c1; if($next) { ++$next; } else { $next = 'a'; }
 	if($s1 ne $s2 || $c2 ne $next ||
 	   (($tags{$s1} || $tags{$t1} || $tags{$t2}) &&
 	    !($tags{$s1} && $tags{$t1} && $tags{$t2}))) {
@@ -44,12 +44,12 @@ while(defined(my $line = <$lesson>)) {
 	    warn 'ошибка тегов ', eval dw qw($file $t1 $t2);
 	}
 	else {
-	    my $lesson_step = substr($s1, 0, 2).'.'.substr($s1, 2);
+	    my $lesson_step = substr($s1, 1, 2).'.'.substr($s1, 3);
 	    if($prev_lesson_step && $prev_lesson_step ne $lesson_step) {
 		$code .= "git merge lesson$prev_lesson_step\n";
 	    }
-	    $code .= "git tag -m _ -a$t1\n" unless $c1;
-	    $code .= "git checkout lesson$lesson_step -- $file && git commit -m _\ngit tag -m _ -a$t2\n";
+	    $code .= "git tag -m _ -a $t1\n" unless $c1;
+	    $code .= "git checkout lesson$lesson_step -- $file && git commit -m _\ngit tag -m _ -a $t2\n";
 	    $prev_lesson_step = $lesson_step;
 	}
     }
