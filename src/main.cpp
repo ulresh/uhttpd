@@ -10,6 +10,7 @@ int main(int argc, const char **argv) {
 	}
 	Server server;
 	server.load_config(argv[1]);
+	server.async_start();
 	server.ios.run();
 	return 0;
 }

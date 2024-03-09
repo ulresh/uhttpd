@@ -5,6 +5,7 @@
 
 struct Server {
 	void load_config(const char *config_filename);
+	void async_start();
 	Config config;
 	io_context ios;
 };
