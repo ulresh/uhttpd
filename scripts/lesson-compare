@@ -46,7 +46,7 @@ while(defined(my $line = <$lesson>)) {
 	else {
 	    my $lesson_step = substr($s1, 1, 2).'.'.substr($s1, 3);
 	    if($prev_lesson_step && $prev_lesson_step ne $lesson_step) {
-		$code .= "git merge lesson$prev_lesson_step\n";
+		$code .= "git merge lesson$prev_lesson_step -m \"Merge tag lesson$prev_lesson_step into compare\"\n";
 	    }
 	    $code .= "git tag -m _ -a $t1\n" unless $c1;
 	    $code .= "git checkout lesson$lesson_step -- $file && git commit -m _\ngit tag -m _ -a $t2\n";
@@ -59,7 +59,7 @@ xclose $lesson;
 if(!$errors && $code) {
     print $code;
     if($prev_lesson_step) {
-	print "git merge lesson$prev_lesson_step\n";
+	print "git merge lesson$prev_lesson_step -m \"Merge tag lesson$prev_lesson_step into compare\"\n";
     }
     print "git push\ngit push origin --tags\n";
 }
