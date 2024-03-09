@@ -1,0 +1,41 @@
+#!/usr/bin/perl -w
+# Автор: Юрий Решетников <reshu@mail.ru>
+
+use strict;
+use warnings;
+use Reshu::Utils;
+
+my %tags;
+my $last = '';
+xopen my($tag), '-|', 'git tag';
+while(defined(my $line = <$tag>)) {
+    chomp $line;
+    if($line =~ /\Ac\d\d\d[a-z]?\z/) {
+	++$tags{$line};
+	$last = $line if $line gt $last;
+    }
+}
+xclose $tag;
+
+my $lesson_number;
+if($last) {
+    die 'TODO +++ ', eval dw qw($last);
+}
+else {
+    $lesson_number = '01';
+}
+
+xopen my($lesson), '<', "lesson/$lesson_number.md";
+while(defined(my $line = <$lesson>)) {
+    while($line =~ /\[(.*?)\]\(.*?\),\s*\[посмотреть\s+отличия\]\(\/..\/..\/compare\/(c\d\d\d[a-z]?)..(c\d\d\d[a-z])\)/g) {
+	my($file,$t1,$t2) = ($1,$2,$3);
+	warn eval dw qw($file $t1 $t2);
+    }
+}
+xclose $lesson;
+
+# Local Variables:
+# mode: perl
+# coding: utf-8-unix
+# tab-width: 8
+# End:
