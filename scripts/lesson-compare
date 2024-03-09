@@ -32,7 +32,7 @@ while(defined(my $file = <$changes>)) {
     chomp $file;
     my $prev = $char;
     if($char) { ++$char; } else { $char = 'a'; }
-    print "Файл [$file](/../$tag2/$file), [посмотреть отличия](/../../compare/$cn$prev..$cn$prev).\n";
+    print "Файл [$file](/../$tag2/$file), [посмотреть отличия](/../../compare/$cn$prev..$cn$char).\n";
 }
 xclose $changes;
 
