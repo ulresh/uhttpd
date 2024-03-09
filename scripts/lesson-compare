@@ -1,0 +1,43 @@
+#!/usr/bin/perl -w
+# Автор: Юрий Решетников
+
+use strict;
+use warnings;
+use Reshu::Utils;
+
+my $tag1 = shift @ARGV;
+my $tag2 = shift @ARGV;
+die eval dw qw($tag1 $tag2 \@ARGV) unless $tag1 && !@ARGV;
+
+my $cn;
+if($tag1 =~ /\Alesson(\d+)\.(\d+)\z/ || $tag1 =~ /\A(\d+)\.(\d+)\z/) {
+    my($les,$step) = ($1,$2);
+    $tag1 = 'lesson'.sprintf('%02d', $les).'.'.$step;
+    unless($tag2) {
+	$tag2 = 'lesson'.sprintf('%02d', $les).'.'.++$step;
+	$cn = 'c'.sprintf('%02d', $les).$step;
+    }
+    elsif($tag2 =~ /\Alesson(\d+)\.(\d+)\z/ || $tag2 =~ /\A(\d+)\.(\d+)\z/) {
+	my($les,$step) = ($1,$2);
+	$tag2 = 'lesson'.sprintf('%02d', $les).'.'.$step;
+	$cn = 'c'.sprintf('%02d', $les).$step;
+    }
+    else { die eval dw qw($tag2); }
+}
+else { die eval dw qw($tag1); }
+
+my $char = '';
+xopen my($changes), '-|', "git diff --name-only $tag1";
+while(defined(my $file = <$changes>)) {
+    chomp $file;
+    my $prev = $char;
+    if($char) { ++$char; } else { $char = 'a'; }
+    print "Файл [$file](/../$tag2/$file), [посмотреть отличия](/../../compare/$cn$prev..$cn$char).\n";
+}
+xclose $changes;
+
+# Local Variables:
+# mode: perl
+# coding: utf-8-unix
+# tab-width: 8
+# End:
