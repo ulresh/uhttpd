@@ -2,3 +2,4 @@
 /bin
 /src/build.local.umake
 /src/umake.log
+/conf/*.so

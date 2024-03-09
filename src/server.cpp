@@ -25,7 +25,7 @@ void Server::load_config(const char *config_filename) {
 				cout << "inc:" << inc << endl;
 			}
 		}
-		int result = bp::system(cc, "-x", "c++", "-shared", inc,
+		int result = bp::system(cc, "-x", "c++", "-shared", "-fPIC", inc,
 								"-o", filename.string(), source);
 		if(result != 0) {
 			cerr << "Ошибка компиляции файла " << source << endl;
@@ -34,7 +34,7 @@ void Server::load_config(const char *config_filename) {
 		boost::dll::shared_library lib(filename.string());
 		boost::function<void(umake::Custom&)> load;
 		try { load = lib.get<void(umake::Custom&)
-							 >("_Z11build_umakeR6Custom"); }
+							 >("_Z11build_umakeRN5umake6CustomE"); }
 		catch(const std::exception &e) {
 			cerr << "exception: " << e.what() << endl; }
 		if(!load) { cerr << "Не найдена функция build_umake в файле "
@@ -48,11 +48,12 @@ void Server::load_config(const char *config_filename) {
 	ccargs.emplace_back("-x");
 	ccargs.emplace_back("c++");
 	ccargs.emplace_back("-shared");
-	for(auto &&p : custom.system_include_pathes) {
+	ccargs.emplace_back("-fPIC");
+	for(auto &&p : umake_custom.system_include_pathes) {
 		ccargs.emplace_back("-isystem");
 		ccargs.push_back(p);
 	}
-	for(auto &&p : custom.include_pathes)
+	for(auto &&p : umake_custom.include_pathes)
 		ccargs.push_back(std::string("-I")+p);
 	ccargs.emplace_back("-o");
 	ccargs.push_back(filename.string());
@@ -64,8 +65,7 @@ void Server::load_config(const char *config_filename) {
 	}
 	boost::dll::shared_library lib(filename.string());
 	boost::function<void(Config&)> load;
-	try { load = lib.get<void(Config&)
-							 >("uhttpd_config"); }
+	try { load = lib.get<void(Config&)>("_Z13uhttpd_configR6Config"); }
 	catch(const std::exception &e) {
 		cerr << "exception: " << e.what() << endl; }
 	if(!load) { cerr << "Не найдена функция uhttpd_config в файле "
