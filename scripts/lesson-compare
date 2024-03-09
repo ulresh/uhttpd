@@ -5,13 +5,14 @@ use strict;
 use warnings;
 use Reshu::Utils;
 
-my %tags;
+my(%tags, %steps);
 my $last = '';
 xopen my($tag), '-|', 'git tag';
 while(defined(my $line = <$tag>)) {
     chomp $line;
     if($line =~ /\Ac\d\d\d[a-z]?\z/) {
 	++$tags{$line};
+	++$steps{substr($line, 0, 4)};
 	$last = $line if $line gt $last;
     }
 }
@@ -25,14 +26,42 @@ else {
     $lesson_number = '01';
 }
 
+my($errors,$code,$prev_lesson_step);
 xopen my($lesson), '<', "lesson/$lesson_number.md";
 while(defined(my $line = <$lesson>)) {
     while($line =~ /\[(.*?)\]\(.*?\),\s*\[посмотреть\s+отличия\]\(\/..\/..\/compare\/(c\d\d\d[a-z]?)..(c\d\d\d[a-z])\)/g) {
 	my($file,$t1,$t2) = ($1,$2,$3);
-	warn eval dw qw($file $t1 $t2);
+	# warn eval dw qw($file $t1 $t2);
+	my $s1 = substr $t1, 0, 3;
+	my $s2 = substr $t2, 0, 3;
+	my $c1 = substr $t1, 3;
+	my $c2 = substr $t2, 3;
+	my $next = $c1; if($next) { ++next; } else { $next = 'a'; }
+	if($s1 ne $s2 || $c2 ne $next ||
+	   (($tags{$s1} || $tags{$t1} || $tags{$t2}) &&
+	    !($tags{$s1} && $tags{$t1} && $tags{$t2}))) {
+	    ++$errors;
+	    warn 'ошибка тегов ', eval dw qw($file $t1 $t2);
+	}
+	else {
+	    my $lesson_step = substr($s1, 0, 2).'.'.substr($s1, 2);
+	    if($prev_lesson_step && $prev_lesson_step ne $lesson_step) {
+		$code .= "git merge lesson$prev_lesson_step\n";
+	    }
+	    $code .= "git tag -m _ -a$t1\n" unless $c1;
+	    $code .= "git checkout lesson$lesson_step -- $file && git commit -m _\ngit tag -m _ -a$t2\n";
+	    $prev_lesson_step = $lesson_step;
+	}
     }
 }
 xclose $lesson;
+
+if(!$errors && $code) {
+    print $code;
+    if($prev_lesson_step) {
+	print "git merge lesson$prev_lesson_step\n";
+    }
+}
 
 # Local Variables:
 # mode: perl
