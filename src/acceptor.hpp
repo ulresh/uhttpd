@@ -5,8 +5,7 @@
 struct Server;
 struct IncomingConnection;
 
-struct Acceptor :
-	std::enable_shared_from_this<IncomingConnection> {
+struct Acceptor : std::enable_shared_from_this<Acceptor> {
 	Acceptor(Server &server, tcp::endpoint endpoint);
 	void async_accept();
 	void handle_accept(std::shared_ptr<Acceptor> ah,

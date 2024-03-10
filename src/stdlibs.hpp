@@ -22,6 +22,8 @@ using boost::system::error_code;
 namespace ai = boost::asio;
 namespace ph = boost::asio::placeholders;
 using boost::asio::io_context;
+namespace ip = boost::asio::ip;
+using boost::asio::ip::tcp;
 using boost::posix_time::ptime;
 using boost::posix_time::microsec_clock;
 using boost::posix_time::second_clock;
