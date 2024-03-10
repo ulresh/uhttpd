@@ -1,4 +1,5 @@
 #include "server.hpp"
+#include "acceptor.hpp"
 
 void Server::load_config(const char *config_filename) {
 	cc = bp::search_path("g++");
@@ -76,6 +77,9 @@ void Server::load_config(const char *config_filename) {
 }
 
 void Server::async_start() {
+	Acceptor *p;
+	acceptor.reset(p = new Acceptor(*this, config.listen_endpoint));
+	p->async_accept();
 }
 
 /*

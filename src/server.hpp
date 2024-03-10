@@ -4,6 +4,8 @@
 #include "umake/custom.hpp"
 #include "uhttpd/config.hpp"
 
+struct Acceptor;
+
 struct Server {
 	void load_config(const char *config_filename);
 	void async_start();
@@ -11,6 +13,8 @@ struct Server {
 	umake::Custom umake_custom;
 	Config config;
 	io_context ios;
+	bool closing = false;
+	std::shared_ptr<Acceptor> acceptor;
 };
 
 /*
