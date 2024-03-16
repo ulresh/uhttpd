@@ -1,40 +1,68 @@
 #!/usr/bin/perl -w
-# Автор: Юрий Решетников
+# Автор: Юрий Решетников <reshu@mail.ru>
 
 use strict;
 use warnings;
 use Reshu::Utils;
 
-my $tag1 = shift @ARGV;
-my $tag2 = shift @ARGV;
-die eval dw qw($tag1 $tag2 \@ARGV) unless $tag1 && !@ARGV;
-
-my $cn;
-if($tag1 =~ /\Alesson(\d+)\.(\d+)\z/ || $tag1 =~ /\A(\d+)\.(\d+)\z/) {
-    my($les,$step) = ($1,$2);
-    $tag1 = 'lesson'.sprintf('%02d', $les).'.'.$step;
-    unless($tag2) {
-	$tag2 = 'lesson'.sprintf('%02d', $les).'.'.++$step;
-	$cn = 'c'.sprintf('%02d', $les).$step;
+my(%tags, %steps);
+my $last = '';
+xopen my($tag), '-|', 'git tag';
+while(defined(my $line = <$tag>)) {
+    chomp $line;
+    if($line =~ /\Ac\d\d\d[a-z]?\z/) {
+	++$tags{$line};
+	++$steps{substr($line, 0, 4)};
+	$last = $line if $line gt $last;
     }
-    elsif($tag2 =~ /\Alesson(\d+)\.(\d+)\z/ || $tag2 =~ /\A(\d+)\.(\d+)\z/) {
-	my($les,$step) = ($1,$2);
-	$tag2 = 'lesson'.sprintf('%02d', $les).'.'.$step;
-	$cn = 'c'.sprintf('%02d', $les).$step;
-    }
-    else { die eval dw qw($tag2); }
 }
-else { die eval dw qw($tag1); }
+xclose $tag;
 
-my $char = '';
-xopen my($changes), '-|', "git diff --name-only $tag1";
-while(defined(my $file = <$changes>)) {
-    chomp $file;
-    my $prev = $char;
-    if($char) { ++$char; } else { $char = 'a'; }
-    print "Файл [$file](/../$tag2/$file), [посмотреть отличия](/../../compare/$cn$prev..$cn$char).\n";
+my $lesson_number;
+if($last) {
+    die 'TODO +++ ', eval dw qw($last);
 }
-xclose $changes;
+else {
+    $lesson_number = '01';
+}
+
+my($errors,$code,$prev_lesson_step);
+xopen my($lesson), '<', "lesson/$lesson_number.md";
+while(defined(my $line = <$lesson>)) {
+    while($line =~ /\[(.*?)\]\(.*?\),\s*\[посмотреть\s+отличия\]\(\/..\/..\/compare\/(c\d\d\d[a-z]?)..(c\d\d\d[a-z])\)/g) {
+	my($file,$t1,$t2) = ($1,$2,$3);
+	# warn eval dw qw($file $t1 $t2);
+	my $s1 = substr $t1, 0, 4;
+	my $s2 = substr $t2, 0, 4;
+	my $c1 = substr $t1, 4;
+	my $c2 = substr $t2, 4;
+	my $next = $c1; if($next) { ++$next; } else { $next = 'a'; }
+	if($s1 ne $s2 || $c2 ne $next ||
+	   (($tags{$s1} || $tags{$t1} || $tags{$t2}) &&
+	    !($tags{$s1} && $tags{$t1} && $tags{$t2}))) {
+	    ++$errors;
+	    warn 'ошибка тегов ', eval dw qw($file $t1 $t2);
+	}
+	else {
+	    my $lesson_step = substr($s1, 1, 2).'.'.substr($s1, 3);
+	    if($prev_lesson_step && $prev_lesson_step ne $lesson_step) {
+		$code .= "git merge lesson$prev_lesson_step -m \"Merge tag lesson$prev_lesson_step into compare\"\n";
+	    }
+	    $code .= "git tag -m _ -a $t1\n" unless $c1;
+	    $code .= "git checkout lesson$lesson_step -- $file && git commit -m _\ngit tag -m _ -a $t2\n";
+	    $prev_lesson_step = $lesson_step;
+	}
+    }
+}
+xclose $lesson;
+
+if(!$errors && $code) {
+    print $code;
+    if($prev_lesson_step) {
+	print "git merge lesson$prev_lesson_step -m \"Merge tag lesson$prev_lesson_step into compare\"\n";
+    }
+    print "git push\ngit push origin --tags\n";
+}
 
 # Local Variables:
 # mode: perl
