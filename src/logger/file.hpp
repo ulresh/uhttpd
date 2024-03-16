@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../stdlibs.hpp"
-#include "../logger.hpp"
+#include "textshp.hpp"
 
 namespace Logger {
 struct File {

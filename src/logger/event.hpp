@@ -2,6 +2,7 @@
 
 #include "../stdlibs.hpp"
 #include "streambuf.hpp"
+#include "textshp.hpp"
 
 namespace Logger {
 struct File;
