@@ -2,6 +2,7 @@
 
 void build_umake(Custom &custom) {
 	custom.libraries.clear();
+	custom.add_library("uring");
 	custom.add_library("dl");
 	custom.add_system_include_path("/usr/local/share/boost_1_84/include");
 	custom.add_library_file(
