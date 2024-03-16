@@ -1,8 +1,10 @@
 #include <umake/custom.hpp>
 
 void build_umake(Custom &custom) {
+	custom.add_define("BOOST_ASIO_HAS_IO_URING");
 	custom.add_library("boost_filesystem");
 	custom.add_library("boost_system");
+	custom.add_library("uring");
 	custom.add_library("dl");
 	custom.add_library_file("-pthread");
 }
