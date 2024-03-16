@@ -2,6 +2,7 @@
 
 #include <string>
 #include <boost/asio.hpp>
+namespace ip = boost::asio::ip;
 using boost::asio::ip::tcp;
 
 struct Config {
