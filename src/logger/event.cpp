@@ -10,7 +10,10 @@ Logger::Event::Event(File &file)
 Logger::Event::~Event() {
 	if(!file.disabled) {
 		flush();
-		file.post(text);
+		if(!text->empty()) {
+			text->append_eol();
+			file.post(text);
+		}
 	}
 }
 
