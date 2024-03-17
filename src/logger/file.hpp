@@ -14,6 +14,7 @@ struct File {
 	ptime skipped_start;
 	long skipped_events = 0, skipped_size = 0;
 	std::array<char, 1024*1024> buffers[2];
+	int current = 0;
 	char *ptr = buffers[0].data();
 	const char *end = buffers[0].data() + buffers[0].size();
 };

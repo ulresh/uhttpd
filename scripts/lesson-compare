@@ -63,6 +63,10 @@ while(defined(my $line = <$lesson>)) {
 	    $code .= "git checkout lesson$lesson_step -- $file && git commit -m _ && git tag -m _ -a $t2\n";
 	    $prev_lesson_step = $lesson_step;
 	}
+	if(!-r $file) {
+	    ++$errors;
+	    warn 'нет файла ', eval dw qw($file $t1 $t2);
+	}
     }
 }
 xclose $lesson;
