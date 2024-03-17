@@ -62,6 +62,14 @@ struct Text {
 			out.write(ptr->data(), ptr->size());
 		out.write(tail->data(), last_block_size);
 	}
+	void write_to_memory(char *mem) const {
+		if(empty()) return;
+		for(auto ptr = sequence.begin(); ptr != tail; ++ptr) {
+			memcpy(mem, ptr->data(), ptr->size());
+			mem += ptr->size();
+		}
+		memcpy(mem, tail->data(), last_block_size);
+	}
 	void init_asio_vector(AsioVector &a) const {
 		if(empty()) return;
 		a.reserve(sequence_size);

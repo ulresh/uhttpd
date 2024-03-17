@@ -19,6 +19,24 @@ Logger::Event::~Event() {
 
 Logger::Event::operator bool () const { return file.disabled; }
 
+Logger::DirectEvent::DirectEvent(File &file)
+	: file(file), text(new Text), buffer(*text)
+{
+	init(&buffer);
+}
+
+Logger::DirectEvent::~DirectEvent() {
+	if(!file.disabled) {
+		flush();
+		if(!text->empty()) {
+			text->append_eol();
+			file.write(text);
+		}
+	}
+}
+
+Logger::DirectEvent::operator bool () const { return file.disabled; }
+
 /*
  * Local Variables:
  * mode: c++

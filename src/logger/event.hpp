@@ -7,10 +7,19 @@
 namespace Logger {
 struct File;
 struct Event : std::ostream {
-	explicit Event(File &file);
+	Event(File &file);
 	~Event();
 	operator bool () const;
 	// void send() { flush(); Event sender(file); std::swap(*this, sender); }
+	File &file;
+	const TextShp text;
+	Streambuf buffer;
+};
+
+struct DirectEvent : std::ostream {
+	DirectEvent(File &file);
+	~DirectEvent();
+	operator bool () const;
 	File &file;
 	const TextShp text;
 	Streambuf buffer;
