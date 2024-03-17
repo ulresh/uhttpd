@@ -69,6 +69,29 @@ struct Text {
 			a.emplace_back(ptr->data(), ptr->size());
 		a.emplace_back(tail->data(), last_block_size);
 	}
+	void append_eol() {
+		if(empty()) {
+			extend();
+			tail->at(last_block_size++) = '\n';
+			++size;
+		}
+		else if(last_block_size) {
+			if(tail->at(last_block_size - 1) != '\n') {
+				if(last_block_size == tail->size()) extend();
+				tail->at(last_block_size++) = '\n';
+				++size;
+			}
+		}
+		else {
+			bool found = false;
+			for(auto ptr = sequence.begin(); ptr != tail; ++ptr)
+				found = (ptr->at(ptr->size() - 1) == '\n');
+			if(!found) {
+				tail->at(last_block_size++) = '\n';
+				++size;
+			}
+		}
+	}
 
 	int size, sequence_size, last_block_size;
 	// last_block_size == sequence_size ? size - (sequence_size - 1) * tuple_size<Block>::value : 0
