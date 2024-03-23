@@ -1,5 +1,6 @@
 #include "event.hpp"
 #include "file.hpp"
+#include "text.hpp"
 
 Logger::Event::Event(File &file)
 	: file(file), text(new Text), buffer(*text)
@@ -18,6 +19,22 @@ Logger::Event::~Event() {
 }
 
 Logger::Event::operator bool () const { return file.disabled; }
+
+
+
+
+const char* Logger::Exception::what() const noexcept {
+	if(auto tp = text.get()) {
+		if(tp->empty()) return "uhttpd Exception text:empty";
+		else if(tp->sequence_size == 1 &&
+				tp->last_block_size < tp->tail->size()) {
+			tp->tail->at(tp->last_block_size) = 0;
+			return tp->tail->data();
+		}
+		else return "uhttpd Exception big text";
+	}
+	else return "uhttpd Exception text:0";
+}
 
 
 
