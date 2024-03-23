@@ -12,6 +12,23 @@
 						<< ' ' << getpid() << " "
 #define LOGERR LOG2(err,out)
 
+#define STRINGIFY_MACRO2(x) #x
+#define STRINGIFY_MACRO(x) STRINGIFY_MACRO2(x)
+#define SLINE STRINGIFY_MACRO(__LINE__)
+
+#define ERRTF(msg) LOGERR << this << "::" << __func__ << " " SLINE " " msg
+#define LOGTF(msg) LOG(out) << this << "::" << __func__ << " " SLINE " " msg
+#ifdef UHTTPD_VERBOSE
+#	define VLTF(msg) LOGTF(msg)
+#else
+#	define VLTF(msg)
+#endif
+#ifdef _DEBUG
+#	define DLTF(msg) LOGTF(msg)
+#else
+#	define DLTF(msg)
+#endif
+
 /*
  * Local Variables:
  * mode: c++

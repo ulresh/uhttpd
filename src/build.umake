@@ -2,6 +2,8 @@
 
 void build_umake(Custom &custom) {
 	custom.add_define("BOOST_ASIO_HAS_IO_URING");
+	custom.add_define("UHTTPD_VERBOSE");
+	// custom.add_define("_DEBUG");
 	custom.add_library("boost_filesystem");
 	custom.add_library("boost_system");
 	custom.add_library("uring");
