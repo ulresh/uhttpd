@@ -1,8 +1,7 @@
 #include "acceptor.hpp"
 #include "server.hpp"
 #include "incoming-connection.hpp"
-#include "logger/event.hpp"
-#include "logger/file.hpp"
+#include "logger.hpp"
 
 Acceptor::Acceptor(Server &server, tcp::endpoint endpoint)
 	: server(server), acceptor(server.ios, endpoint)
@@ -23,10 +22,8 @@ void Acceptor::handle_accept(std::shared_ptr<Acceptor> ah,
 	if(closing || server.closing || error) return;
 	async_accept();
 	error_code ec;
-	if(Logger::Event e = Logger::out);
-	else e << microsec_clock::local_time() << ' ' << getpid()
-		   << " Acceptor::handle_accept remote:"
-		   << ch->socket.remote_endpoint(ec);
+	LOG(out) "Acceptor::handle_accept remote:"
+		<< ch->socket.remote_endpoint(ec);
 	ch->async_read();
 }
 

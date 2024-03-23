@@ -6,12 +6,23 @@
 
 namespace Logger {
 struct File;
+
 struct Event : std::ostream {
 	Event(File &file);
 	~Event();
 	operator bool () const;
 	// void send() { flush(); Event sender(file); std::swap(*this, sender); }
 	File &file;
+	const TextShp text;
+	Streambuf buffer;
+};
+
+struct Event2 : std::ostream {
+	Event2(File &file1, File &file2);
+	Event2(std::pair<File&, File&> p) : Event2(p.first, p.second) {}
+	~Event2();
+	operator bool () const;
+	File &file1, &file2;
 	const TextShp text;
 	Streambuf buffer;
 };

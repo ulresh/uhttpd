@@ -1,8 +1,9 @@
 #include "stdlibs.hpp"
 #include "server.hpp"
+#include "logger.hpp"
 
 int main(int argc, const char **argv) {
-	cout << "https://github.com/ulresh/uhttpd" << endl;
+	LOGERR << "started https://github.com/ulresh/uhttpd";
 	if(argc != 2) {
 		cerr << "Требуется указать имя конфигурационного файла"
 			" в качестве параметра" << endl;
