@@ -1,6 +1,6 @@
 #include "server.hpp"
 #include "acceptor.hpp"
-#include "logger/file.hpp"
+#include "logger.hpp"
 
 void Server::load_config(const char *config_filename) {
 	cc = bp::search_path("g++");
@@ -79,7 +79,7 @@ void Server::load_config(const char *config_filename) {
 	else Logger::n.open(ios, config.log.n)
 	TUNE_LOG(err); TUNE_LOG(out); TUNE_LOG(access);
 #undef TUNE_LOG
-	cout << "listen:" << config.listen_endpoint << endl;
+	LOG(out) "listen:" << config.listen_endpoint;
 }
 
 void Server::async_start() {
