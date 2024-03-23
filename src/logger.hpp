@@ -18,18 +18,24 @@
 #define SLINE STRINGIFY_MACRO(__LINE__)
 
 #define ERRTF(msg) LOGERR << this << "::" << __func__ << " " SLINE " " msg
-#define ERRCF(msg) LOGERR << STRINGIFY_MACRO(LOGGER_CLASS_NAME) "::" \
+#define ERRCF(msg) LOGERR STRINGIFY_MACRO(LOGGER_CLASS_NAME) "::" \
 	<< __func__ << " " SLINE " " msg
 #define LOGTF(msg) LOG(out) << this << "::" << __func__ << " " SLINE " " msg
+#define LOGCF(msg) LOG(out) STRINGIFY_MACRO(LOGGER_CLASS_NAME) "::" \
+	<< __func__ << " " SLINE " " msg
 #ifdef UHTTPD_VERBOSE
 #	define VLTF(msg) LOGTF(msg)
+#	define VLCF(msg) LOGCF(msg)
 #else
 #	define VLTF(msg)
+#	define VLCF(msg)
 #endif
 #ifdef _DEBUG
 #	define DLTF(msg) LOGTF(msg)
+#	define DLCF(msg) LOGCF(msg)
 #else
 #	define DLTF(msg)
+#	define DLCF(msg)
 #endif
 
 #ifdef _DEBUG
