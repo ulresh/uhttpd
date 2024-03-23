@@ -2,6 +2,8 @@
 #include "server.hpp"
 #include "logger.hpp"
 
+#define LOGGER_CLASS_NAME M
+
 int main(int argc, const char **argv) {
 	LOGERR << "started https://github.com/ulresh/uhttpd";
 	if(argc != 2) {
@@ -12,7 +14,7 @@ int main(int argc, const char **argv) {
 	Server server;
 	server.load_config(argv[1]);
 	server.async_start();
-	server.ios.run();
+	for(;;) try { server.ios.run(); return 0; } CATCH_ERRCF
 	return 0;
 }
 
