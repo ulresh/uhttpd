@@ -19,6 +19,7 @@ struct Event : std::ostream {
 struct DirectEvent : std::ostream {
 	DirectEvent(File &file);
 	~DirectEvent();
+	static int max_size() { return 256; }
 	operator bool () const;
 	File &file;
 	const TextShp text;

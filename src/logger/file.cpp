@@ -25,7 +25,7 @@ void Logger::File::write(TextShp text) {
 			skipped_size += text->size;
 		}
 		else if(text->size > end - ptr) {
-			if(end - ptr > 256) {
+			if(end - ptr > DirectEvent::max_size()) {
 				if(DirectEvent e = *this) ;
 				else e << microsec_clock::local_time() << ' ' << getpid()
 					   << "[logger] too big message size:" << text->size;
@@ -42,6 +42,7 @@ void Logger::File::write(TextShp text) {
 		}
 	}
 	else {
+		busy = true;
 		Text::AsioVector a;
 		text->init_asio_vector(a);
 		ai::async_write(*stream, a,

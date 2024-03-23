@@ -100,6 +100,19 @@ struct Text {
 			}
 		}
 	}
+	void reduce_to_one_buffer_with_eol(int max_size) {
+		if(size > max_size) {
+			if(sequence_size > 1) {
+				tail = sequence.begin();
+				sequence.erase_after(tail, sequence.end());
+				sequence_size = 1;
+			}
+			if(max_size < tail->size())
+				size = last_block_size = max_size;
+			else size = last_block_size = tail->size();
+			tail->at(last_block_size - 1) = '\n';
+		}
+	}
 
 	int size, sequence_size, last_block_size;
 	// last_block_size == sequence_size ? size - (sequence_size - 1) * tuple_size<Block>::value : 0

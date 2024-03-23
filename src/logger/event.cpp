@@ -30,6 +30,7 @@ Logger::DirectEvent::~DirectEvent() {
 		flush();
 		if(!text->empty()) {
 			text->append_eol();
+			text->reduce_to_one_buffer_with_eol(max_size());
 			file.write(text);
 		}
 	}
