@@ -8,6 +8,10 @@ using boost::asio::ip::tcp;
 struct Config {
 	tcp::endpoint listen_endpoint;
 	std::string documents_root;
+	struct Log {
+		std::string err, out, access;
+	};
+	Log log;
 };
 
 /*
