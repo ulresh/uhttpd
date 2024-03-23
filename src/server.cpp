@@ -2,7 +2,7 @@
 #include "acceptor.hpp"
 #include "logger.hpp"
 
-#define LOGCF_CLASS_NAME Server
+#define LOGGER_CLASS_NAME Server
 
 Server::Server()
 	: sighup(ios, SIGHUP)
