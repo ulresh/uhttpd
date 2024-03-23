@@ -16,6 +16,15 @@ struct Acceptor : std::enable_shared_from_this<Acceptor> {
 	bool closing = false;
 };
 
+inline std::ostream & operator << (std::ostream &out, const Acceptor *a) {
+	out << static_cast<const void *>(a);
+	if(a) {
+		error_code ec;
+		out << "(loc:" << a->acceptor.local_endpoint(ec) << ')';
+	}
+	return out << " Acceptor::";
+}
+
 /*
  * Local Variables:
  * mode: c++
