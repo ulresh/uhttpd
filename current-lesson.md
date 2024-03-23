@@ -1,1 +1,1 @@
-[lesson/02.md](/../master/lesson/02.md#lesson023)
+[lesson/02.md](/../master/lesson/02.md#lesson024)

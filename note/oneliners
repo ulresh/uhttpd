@@ -1,0 +1,5 @@
+(t=lesson02.1; git tag -d $t; git push origin --delete $t; git tag -a $t -m _; git push origin $t)
+(t=lesson02.1; git tag -a $t -m _; git push origin $t)
+git tag -a lesson02.1 -m _; git push origin --tags
+(t=lesson02.1; git tag -d $t; git push t1 --delete $t; git tag -a $t -m _; git push t1 $t)
+(t=lesson02.1; git tag -d $t; git push t1 --delete $t; git push origin --delete $t; git tag -a $t -m _; git push origin $t)
