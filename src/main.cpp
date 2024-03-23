@@ -2,7 +2,7 @@
 #include "server.hpp"
 
 int main(int argc, const char **argv) {
-	cout << "https://github.com/ulresh/umake" << endl;
+	cout << "https://github.com/ulresh/uhttpd" << endl;
 	if(argc != 2) {
 		cerr << "Требуется указать имя конфигурационного файла"
 			" в качестве параметра" << endl;
