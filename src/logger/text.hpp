@@ -62,6 +62,14 @@ struct Text {
 			out.write(ptr->data(), ptr->size());
 		out.write(tail->data(), last_block_size);
 	}
+	void write_to_memory(char *mem) const {
+		if(empty()) return;
+		for(auto ptr = sequence.begin(); ptr != tail; ++ptr) {
+			memcpy(mem, ptr->data(), ptr->size());
+			mem += ptr->size();
+		}
+		memcpy(mem, tail->data(), last_block_size);
+	}
 	void init_asio_vector(AsioVector &a) const {
 		if(empty()) return;
 		a.reserve(sequence_size);
@@ -90,6 +98,19 @@ struct Text {
 				tail->at(last_block_size++) = '\n';
 				++size;
 			}
+		}
+	}
+	void reduce_to_one_buffer_with_eol(int max_size) {
+		if(size > max_size) {
+			if(sequence_size > 1) {
+				tail = sequence.begin();
+				sequence.erase_after(tail, sequence.end());
+				sequence_size = 1;
+			}
+			if(max_size < tail->size())
+				size = last_block_size = max_size;
+			else size = last_block_size = tail->size();
+			tail->at(last_block_size - 1) = '\n';
 		}
 	}
 
