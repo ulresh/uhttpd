@@ -17,6 +17,17 @@ struct Event : std::ostream {
 	Streambuf buffer;
 };
 
+struct Exception : std::exception {
+	explicit Exception(TextShp text) : text(text) {}
+	const char* what() const noexcept override;
+	const TextShp text;
+};
+inline std::ostream & operator << (std::ostream &out, const Exception &e) {
+	if(auto tp = e.text.get())
+		tp->write_to_stream(out);
+	return out;
+}
+
 struct Event2 : std::ostream {
 	Event2(File &file1, File &file2);
 	Event2(std::pair<File&, File&> p) : Event2(p.first, p.second) {}
