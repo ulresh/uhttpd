@@ -74,9 +74,9 @@ xclose $lesson;
 if(!$errors && $code) {
     print $code;
     if($prev_lesson_step) {
-	print "git merge lesson$prev_lesson_step -m \"Merge tag lesson$prev_lesson_step into compare\"\n";
+	print "git merge lesson$prev_lesson_step -m \"Merge tag lesson$prev_lesson_step into compare\" && ";
     }
-    print "git push\ngit push origin --tags\n";
+    print "git push && git push origin --tags\n";
 }
 
 # Local Variables:
