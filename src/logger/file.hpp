@@ -8,6 +8,8 @@ struct File {
 	File() {}
 	void open(io_context &ios, const std::string &filepath);
 	void post(TextShp text);
+	void write(TextShp text);
+	void ready(TextShp text, const error_code& error);
 	io_context *iosp = nullptr;
 	std::unique_ptr<ai::stream_file> stream;
 	bool busy = true, disabled = false;
