@@ -4,13 +4,25 @@
 
 namespace Logger { File err, out, access; }
 
-void Logger::File::open(io_context &ios, const std::string &filepath) {
-	iosp = &ios;
-	stream.reset(new ai::stream_file(ios, filepath,
+void Logger::File::reset_stream(const std::string &filepath) {
+	stream.reset(new ai::stream_file(*iosp, filepath,
 									 ai::stream_file::write_only |
 									 ai::stream_file::create |
 									 ai::stream_file::append));
+}
+
+void Logger::File::open(io_context &ios, const std::string &filepath) {
+	iosp = &ios;
+	reset_stream(filepath);
 	ready(TextShp(), error_code());
+}
+
+void Logger::File::reopen(const std::string &filepath) {
+	if(!iosp) {
+		cerr << "Logger::File::reopen iosp:0 filepath:" << filepath << endl;
+	}
+	else if(busy) reopen_filepath = filepath;
+	else reset_stream(filepath);
 }
 
 void Logger::File::post(TextShp text) {
@@ -54,6 +66,10 @@ void Logger::File::ready(TextShp text, const error_code& error) {
 	if(error) {
 		cerr << "Logger::File::ready error:" << error << '/'
 			 << error.message() << endl;
+	}
+	if(!reopen_filepath.empty()) {
+		reset_stream(reopen_filepath);
+		reopen_filepath.clear();
 	}
 	if(ptr == buffers[current].data()) busy = false;
 	else {
