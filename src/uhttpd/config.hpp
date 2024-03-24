@@ -7,7 +7,7 @@ using boost::asio::ip::tcp;
 
 struct Config {
 	tcp::endpoint listen_endpoint;
-	std::string documents_root;
+	std::string documents_root, pid_file;
 	struct Log {
 		std::string err, out, access;
 	};
