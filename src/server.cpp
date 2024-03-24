@@ -2,6 +2,17 @@
 #include "acceptor.hpp"
 #include "logger.hpp"
 
+#define LOGGER_CLASS_NAME Server
+
+Server::Server()
+	: sighup(ios, SIGHUP)
+{}
+
+void Server::close() {
+	closing = true;
+	sighup.cancel();
+}
+
 void Server::load_config(const char *config_filename) {
 	cc = bp::search_path("g++");
 	fs::path filename = config_filename;
@@ -83,9 +94,23 @@ void Server::load_config(const char *config_filename) {
 }
 
 void Server::async_start() {
+	sighup.async_wait(boost::bind(&Server::sighup_handler, this, ph::error));
 	Acceptor *p;
 	acceptor.reset(p = new Acceptor(*this, config.listen_endpoint));
 	p->async_accept();
+}
+
+void Server::sighup_handler(const error_code &error) {
+	LOGCF( << LogErr(error));
+	if(!error) {
+#define TUNE_LOG(n) \
+	if(!config.log.n.empty()) Logger::n.reopen(config.log.n)
+		TUNE_LOG(err); TUNE_LOG(out); TUNE_LOG(access);
+#undef TUNE_LOG
+		ERRCF();
+		sighup.async_wait(boost::bind(&Server::sighup_handler,
+									  this, ph::error));
+	}
 }
 
 /*
