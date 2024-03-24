@@ -59,6 +59,15 @@
 	catch(const std::exception &e) { ERRCF("exception:" << e.what()); }	\
 	catch(...) { ERRCF("unknown exception"); }
 
+struct LogErr {
+	LogErr(const error_code &error) : error(error) {}
+	const error_code &error;
+};
+inline std::ostream & operator << (std::ostream &out, const LogErr &e) {
+	if(e.error) out << " error:" << e.error << '/' << e.error.message();
+	return out;
+}
+
 /*
  * Local Variables:
  * mode: c++
