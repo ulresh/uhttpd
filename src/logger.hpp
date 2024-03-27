@@ -68,6 +68,12 @@ inline std::ostream & operator << (std::ostream &out, const LogErr &e) {
 	return out;
 }
 
+struct ErrNo {};
+inline std::ostream & operator << (std::ostream &out, ErrNo) {
+	if(errno) out << " errno:" << errno << '/' << strerror(errno);
+	return out;
+}
+
 /*
  * Local Variables:
  * mode: c++

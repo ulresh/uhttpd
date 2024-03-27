@@ -1,6 +1,7 @@
 #include "server.hpp"
 #include "acceptor.hpp"
 #include "logger.hpp"
+#include <sys/file.h>
 
 #define LOGGER_CLASS_NAME Server
 
@@ -11,7 +12,8 @@ Server::Server()
 Server::~Server() {
 	if(!config.pid_file.empty()) {
 		auto e = unlink(config.pid_file.c_str());
-		if(e) cerr << "unlink pid_file:" << pid_file << ErrNo() << endl;
+		if(e) cerr << "unlink pid_file:" << config.pid_file
+				   << ErrNo() << endl;
 	}
 }
 
@@ -95,17 +97,18 @@ void Server::load_config(const char *config_filename) {
 	if(!config.pid_file.empty()) {
 		int f = open(config.pid_file.c_str(), O_WRONLY | O_CREAT, 0666);
 		if(f < 0) {
-			cerr << "open pid_file:" << pid_file << ErrNo() << endl;
+			cerr << "open pid_file:" << config.pid_file << ErrNo() << endl;
 			exit(1);
 		}
-		int e = flock(f, LOCK_EX);
+		int e = flock(f, LOCK_EX | LOCK_NB);
 		if(e) {
-			cerr << "flock pid_file:" << pid_file << ErrNo() << endl;
+			cerr << "flock pid_file:" << config.pid_file << ErrNo() << endl;
 			exit(1);
 		}
 		e = ftruncate(f, 0);
 		if(e) {
-			cerr << "ftruncate pid_file:" << pid_file << ErrNo() << endl;
+			cerr << "ftruncate pid_file:" << config.pid_file
+				 << ErrNo() << endl;
 			exit(1);
 		}
 		ss::write_to_file(f, ss() << getpid() << "\n");
