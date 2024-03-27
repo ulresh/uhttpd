@@ -70,6 +70,19 @@ struct Text {
 		}
 		memcpy(mem, tail->data(), last_block_size);
 	}
+	static std::size_t write_to_file(int fd, Logger::TextShp texth) {
+		if(empty()) return 0;
+		else if(sequence_size == 1)
+			return write(fd, tail->data(), last_block_size);
+		else {
+			iovec *vpb, *vp;
+			std::unique_ptr<iovec[]> vh(vp = vpb = new iovec[sequence_size]);
+			for(auto ptr = sequence.begin(); ptr != tail; ++ptr, ++vp)
+				*vp = {ptr->data(), ptr->size()};
+			*vp = {tail->data(), last_block_size};
+			return writev(fd, vpb, sequence_size);
+		}
+	}
 	void init_asio_vector(AsioVector &a) const {
 		if(empty()) return;
 		a.reserve(sequence_size);
