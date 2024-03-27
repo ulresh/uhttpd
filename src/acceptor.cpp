@@ -8,6 +8,11 @@ Acceptor::Acceptor(Server &server, tcp::endpoint endpoint)
 {
 }
 
+void Acceptor::close() {
+	closing = true;
+	acceptor.cancel();
+}
+
 void Acceptor::async_accept() {
 	IncomingConnection *cp;
 	std::shared_ptr<IncomingConnection>
