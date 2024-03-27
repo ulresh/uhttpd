@@ -8,6 +8,7 @@ struct Acceptor;
 
 struct Server {
 	Server();
+	~Server();
 	void close();
 	void load_config(const char *config_filename);
 	void async_start();
