@@ -7,6 +7,7 @@
 
 Server::Server()
 	: sighup(ios, SIGHUP)
+	, sigterm(ios, SIGTERM, SIGINT)
 {}
 
 Server::~Server() {
@@ -20,6 +21,8 @@ Server::~Server() {
 void Server::close() {
 	closing = true;
 	sighup.cancel();
+	sigterm.cancel();
+	if(auto ap = acceptor.get()) ap->close();
 }
 
 void Server::load_config(const char *config_filename) {
@@ -123,6 +126,8 @@ void Server::load_config(const char *config_filename) {
 
 void Server::async_start() {
 	sighup.async_wait(boost::bind(&Server::sighup_handler, this, ph::error));
+	sigterm.async_wait(boost::bind(&Server::sigterm_handler,
+								   this, ph::error));
 	Acceptor *p;
 	acceptor.reset(p = new Acceptor(*this, config.listen_endpoint));
 	p->async_accept();
@@ -130,7 +135,7 @@ void Server::async_start() {
 
 void Server::sighup_handler(const error_code &error) {
 	LOGCF( << LogErr(error));
-	if(!error) {
+	if(!error && !closing) {
 #define TUNE_LOG(n) \
 	if(!config.log.n.empty()) Logger::n.reopen(config.log.n)
 		TUNE_LOG(err); TUNE_LOG(out); TUNE_LOG(access);
@@ -139,6 +144,11 @@ void Server::sighup_handler(const error_code &error) {
 		sighup.async_wait(boost::bind(&Server::sighup_handler,
 									  this, ph::error));
 	}
+}
+
+void Server::sigterm_handler(const error_code &error) {
+	ERRCF( << LogErr(error));
+	if(!error && !closing) close();
 }
 
 /*
