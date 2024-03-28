@@ -13,12 +13,13 @@ struct Server {
 	void load_config(const char *config_filename);
 	void async_start();
 	void sighup_handler(const error_code &error);
+	void sigterm_handler(const error_code &error);
 	bp::filesystem::path cc;
 	umake::Custom umake_custom;
 	Config config;
 	io_context ios;
 	bool closing = false;
-	ai::signal_set sighup;
+	ai::signal_set sighup, sigterm;
 	std::shared_ptr<Acceptor> acceptor;
 };
 
