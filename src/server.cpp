@@ -1,6 +1,7 @@
 #include "server.hpp"
 #include "acceptor.hpp"
 #include "logger.hpp"
+#include "incoming-connection.hpp"
 #include <sys/file.h>
 
 #define LOGGER_CLASS_NAME Server
@@ -23,7 +24,7 @@ void Server::close() {
 	sighup.cancel();
 	sigterm.cancel();
 	if(auto ap = acceptor.get()) ap->close();
-	while(!incomings.empty()) incomings.front.close();
+	while(!incomings.empty()) incomings.front()->close();
 }
 
 void Server::load_config(const char *config_filename) {

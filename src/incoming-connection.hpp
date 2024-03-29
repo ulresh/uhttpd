@@ -32,7 +32,7 @@ inline std::ostream & operator << (std::ostream &out,
 				<< ",rem:" << icon->socket.remote_endpoint(ec) << ')';
 		}
 	}
-	return out << " IncomingConnection::";
+	return out << " IncomingConnection";
 }
 
 /*

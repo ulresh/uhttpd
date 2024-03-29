@@ -27,7 +27,8 @@ void Acceptor::handle_accept(std::shared_ptr<Acceptor> ah,
 	if(closing || server.closing || error) return;
 	async_accept();
 	error_code ec;
-	VLTF("remote:" << ch->socket.remote_endpoint(ec));
+	LOGTF("remote:" << ch->socket.remote_endpoint(ec)
+		  << " icon:" << static_cast<const void *>(ch.get()));
 	ch->async_start();
 }
 
