@@ -3,6 +3,7 @@
 #include <iostream>
 #include <map>
 #include <forward_list>
+#include <list>
 #include <boost/filesystem.hpp>
 #include <boost/process.hpp>
 #include <boost/dll.hpp>
@@ -23,6 +24,7 @@ using boost::system::error_code;
 namespace ai = boost::asio;
 namespace ph = boost::asio::placeholders;
 using boost::asio::io_context;
+using boost::asio::deadline_timer;
 namespace ip = boost::asio::ip;
 using boost::asio::ip::tcp;
 using boost::posix_time::ptime;
@@ -42,6 +44,12 @@ extern boost::iostreams::stream<TeeDevice> uout;
 inline ptime utc2local(ptime t) {
 	return boost::date_time::c_local_adjustor<ptime>::utc_to_local(t); }
 inline ptime utc2local(std::time_t t) { return utc2local(from_time_t(t)); }
+
+
+struct Server;
+struct IncomingConnection;
+typedef std::shared_ptr<IncomingConnection> IncomingConnectionShp;
+typedef std::list<IncomingConnectionShp> IncomingConnectionList;
 
 /*
  * Local Variables:

@@ -23,6 +23,7 @@ void Server::close() {
 	sighup.cancel();
 	sigterm.cancel();
 	if(auto ap = acceptor.get()) ap->close();
+	while(!incomings.empty()) incomings.front.close();
 }
 
 void Server::load_config(const char *config_filename) {

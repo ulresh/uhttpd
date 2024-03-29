@@ -21,6 +21,7 @@ struct Server {
 	bool closing = false;
 	ai::signal_set sighup, sigterm;
 	std::shared_ptr<Acceptor> acceptor;
+	IncomingConnectionList incomings;
 };
 
 /*
