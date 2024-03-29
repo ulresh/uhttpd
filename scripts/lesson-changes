@@ -27,12 +27,35 @@ if($tag1 =~ /\Alesson(\d+)\.(\d+)\z/ || $tag1 =~ /\A(\d+)\.(\d+)\z/) {
 else { die eval dw qw($tag1); }
 
 my $char = '';
+my $cpp_file;
 xopen my($changes), '-|', "git diff --name-only $tag1";
 while(defined(my $file = <$changes>)) {
     chomp $file;
-    my $prev = $char;
-    if($char) { ++$char; } else { $char = 'a'; }
-    print "Файл [$file](/../$tag2/$file), [посмотреть отличия](/../../compare/$cn$prev..$cn$char).\n";
+    next if $file eq 'current-lesson.md' || 'lesson/' eq substr $file, 0, 7;
+    my $play = sub {
+	my $file = shift;
+	my $prev = $char;
+	if($char) { ++$char; } else { $char = 'a'; }
+	print "Файл [$file](/../$tag2/$file), [посмотреть отличия](/../../compare/$cn$prev..$cn$char).\n";
+    };
+    if('.cpp' eq substr $file, -4) {
+	$play->($cpp_file) if $cpp_file;
+	$cpp_file = $file;
+    }
+    elsif($cpp_file) {
+	my $check = $cpp_file;
+	substr $check, -4, 4, '.hpp';
+	if($file eq $check) {
+	    $play->($file);
+	    $play->($cpp_file);
+	}
+	else {
+	    $play->($cpp_file);
+	    $play->($file);
+	}
+	undef $cpp_file;
+    }
+    else { $play->($file); }
 }
 xclose $changes;
 
