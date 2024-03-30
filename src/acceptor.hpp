@@ -23,7 +23,7 @@ inline std::ostream & operator << (std::ostream &out, const Acceptor *a) {
 		error_code ec;
 		out << "(loc:" << a->acceptor.local_endpoint(ec) << ')';
 	}
-	return out << " Acceptor::";
+	return out << " Acceptor";
 }
 
 /*
