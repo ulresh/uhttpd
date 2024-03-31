@@ -27,7 +27,7 @@ void IncomingConnection::async_start() {
 		close();
 	});
 	buffer.reset(new char[header_buffer_size()]);
-	state = 0; header_size = 0;
+	clear_state();
 	async_read_header();
 }
 
