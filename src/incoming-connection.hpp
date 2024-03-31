@@ -22,6 +22,8 @@ struct IncomingConnection :
 							int offset, int mark_offset,
 							const error_code& error,
 							std::size_t bytes_transferred);
+	bool parsed_string_append(std::string &s,
+							  const char *mark, const char *end);
 	Server &server;
 	tcp::socket socket;
 	bool closing = false;
@@ -32,6 +34,7 @@ struct IncomingConnection :
 	std::string method, proto;
 	std::list<std::string> path;
 	bool keep_alive;
+	int decoded_char;
 };
 
 inline std::ostream & operator << (std::ostream &out,

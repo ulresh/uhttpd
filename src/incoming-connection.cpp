@@ -53,10 +53,12 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 	if(closing || server.closing) return;
 	else if(error) { LOGTF( << LogErr(error)); close(); return; }
 	if(!bytes_transferred) goto read_next_chunk;
+	header_size += bytes_transferred;
 	{char *mark = buffer.get(), *ptr = mark + offset,
 			*end = ptr + bytes_transferred, *end1 = end - 1;
 	mark += mark_offset;
 	for(; ptr < end; ++ptr)
+	retry:
 		switch(state) {
 		default: VLTF("unknown state:" << state); close(); return;
 		case 0:
@@ -117,22 +119,83 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 					if(ptr == end1) goto read_next_chunk;
 					break;
 				case '%':
-					ERRTF("TODO"); close(); return;
+					path.back().append(mark, ptr - mark);
+					up_state = state; state = 4;
+					if(ptr == end1) goto read_next_chunk;
+					else { ++ptr; goto state_4; }
 				default:
 					if(ptr == end1) {
-						path.back().append(mark, ptr - mark);
-						goto read_next_chunk;
+						if(parsed_string_append(path.back(), mark, end))
+							goto read_next_chunk;
+						else return;
 					}
 					break;
 				}
+		case 4:
+		state_4:
+#define BAD VLTF("bad char in hex code:" << LogChar(*ptr)); close(); return;
+			{	auto c = *ptr;
+				if(c < '0') {BAD}
+				else if(c <= '9') decoded_char = (c - '0') << 4;
+				else if(c < 'A') {BAD}
+				else if(c <= 'F') decoded_char = (c - 'A' + 10) << 4;
+				else if(c < 'a') {BAD}
+				else if(c <= 'f') decoded_char = (c - 'a' + 10) << 4;
+				else {BAD}
+			}
+			++state;
+			if(ptr == end1) goto read_next_chunk;
+			++ptr;
+		case 5:
+			{	auto c = *ptr;
+				if(c < '0') {BAD}
+				else if(c <= '9') decoded_char += c - '0';
+				else if(c < 'A') {BAD}
+				else if(c <= 'F') decoded_char += c - 'A' + 10;
+				else if(c < 'a') {BAD}
+				else if(c <= 'f') decoded_char += c - 'a' + 10;
+				else {BAD}
+			}
+			state = up_state;
+			switch(state) {
+			default: VLTF("bad state:" << state); close(); return;
+			case 3: path.back().append(1, decoded_char); break;
+			}
+			if(ptr == end1) goto read_next_chunk;
+			else { ++ptr; goto retry; }
+#undef BAD
 		}
 	}
  read_next_chunk:
-	header_size += bytes_transferred;
-	if(header_size >= server.config.max_request_header_size) {
-		LOGTF("too big header size:" << header_size);
-		close(); return; }
+#define CHECK_HEADER_SIZE(r) \
+	if(header_size >= server.config.max_request_header_size) { \
+		LOGTF("too big header size:" << header_size); \
+		close(); return r; }
+	CHECK_HEADER_SIZE();
 	async_read_header();
+}
+
+bool IncomingConnection::parsed_string_append(std::string &s,
+			const char *mark, const char *end) {
+	if(auto size = end - mark) {
+		if(size > header_buffer_size() / 2 ||
+		   size <= s.capacity() - s.size()) {
+			s.append(mark, size);
+			return true;
+		}
+		else {
+			CHECK_HEADER_SIZE(false);
+			auto start = buffer.get();
+			if(end - start <= header_buffer_size() / 4 * 3)
+				async_read_header(end - start, mark - start);
+			else {
+				memcpy(start, mark, size);
+				async_read_header(size);
+			}
+			return false;
+		}
+	}
+	else return true;
 }
 
 /*
