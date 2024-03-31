@@ -7,9 +7,19 @@ struct IncomingConnection :
 	IncomingConnection(Server &server);
 	void close();
 	void async_start();
-	void async_read_header();
+	void clear_state() {
+		state = 0;
+		header_size = 0;
+		http_version = 0;
+		method.clear();
+		proto.clear();
+		path.clear();
+		keep_alive = false;
+	}
+	void async_read_header(int offset = 0, int mark_offset = 0);
 	static int header_buffer_size() { return 4096; }
 	void handle_read_header(IncomingConnectionShp,
+							int offset, int mark_offset,
 							const error_code& error,
 							std::size_t bytes_transferred);
 	Server &server;
@@ -18,7 +28,10 @@ struct IncomingConnection :
 	IncomingConnectionList::iterator anchor;
 	deadline_timer timer;
 	std::unique_ptr<char[]> buffer;
-	int state, up_state, header_size;
+	int state, up_state, header_size, http_version;
+	std::string method, proto;
+	std::list<std::string> path;
+	bool keep_alive;
 };
 
 inline std::ostream & operator << (std::ostream &out,
