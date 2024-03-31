@@ -91,10 +91,10 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 		case 2:
 			while(*ptr == ' ') if(++ptr == end) goto read_next_chunk;
 			mark = ptr;
-			url.emplace_back();
+			path.emplace_back();
 			++state;
 		case 3:
-		next_url_char:
+		next_path_char:
 			switch(*ptr) {
 			case ' ':
 			case '?':
@@ -102,28 +102,28 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 			case '\r':
 			case '\n':
 				if(ptr == mark) {
-					if(url.back().empty() && url.size() == 1) {
-						VLTF("empty url"); close(); return; }
+					if(path.back().empty() && path.size() == 1) {
+						VLTF("empty path"); close(); return; }
 				}
-				else url.back().append(mark, ptr - mark);
+				else path.back().append(mark, ptr - mark);
 				// EDIT POINT
 				ERRTF("TODO"); close(); return;
 			case '/':
-				url.back().append(mark, ptr - mark);
+				path.back().append(mark, ptr - mark);
 				ERRTF("TODO"); close(); return;
 			case '+':
-				url.back().append(mark, ptr - mark);
-				url.back().append(1, ' ');
+				path.back().append(mark, ptr - mark);
+				path.back().append(1, ' ');
 				if(++ptr == end) goto read_next_chunk;
-				else goto next_url_char;
+				else goto next_path_char;
 			case '%':
 				ERRTF("TODO"); close(); return;
 			default:
 				if(++ptr == end) {
-					url.back().append(mark, ptr - mark);
+					path.back().append(mark, ptr - mark);
 					goto read_next_chunk;
 				}
-				else goto next_url_char;
+				else goto next_path_char;
 			}
 		}
 	}

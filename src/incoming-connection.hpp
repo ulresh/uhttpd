@@ -20,8 +20,9 @@ struct IncomingConnection :
 	deadline_timer timer;
 	std::unique_ptr<char[]> buffer;
 	int state, up_state, header_size, http_version = 0;
-	std::string method, proto, connection;
-	std::list<std::string> url;
+	std::string method, proto;
+	std::list<std::string> path;
+	bool keep_alive = false;
 };
 
 inline std::ostream & operator << (std::ostream &out,
