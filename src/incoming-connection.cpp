@@ -70,7 +70,7 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 			}
 		case 1:
 			while(*ptr >= 'A' && *ptr <= 'Z') {
-				if(++ptr == end) {
+				if(ptr < end1) ++ptr; else {
 					header_size += bytes_transferred;
 					if(end == buffer.get() + header_buffer_size()) {
 						VLTF("too big method name");
@@ -89,42 +89,43 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 				VLTF("bad method char:" << int(*ptr));
 				close(); return; }
 		case 2:
-			while(*ptr == ' ') if(++ptr == end) goto read_next_chunk;
+			while(*ptr == ' ')
+				if(ptr < end1) ++ptr; else goto read_next_chunk;
 			mark = ptr;
 			path.emplace_back();
 			++state;
 		case 3:
-		next_path_char:
-			switch(*ptr) {
-			case ' ':
-			case '?':
-			case '#':
-			case '\r':
-			case '\n':
-				if(ptr == mark) {
-					if(path.back().empty() && path.size() == 1) {
-						VLTF("empty path"); close(); return; }
-				}
-				else path.back().append(mark, ptr - mark);
-				// EDIT POINT
-				ERRTF("TODO"); close(); return;
-			case '/':
-				path.back().append(mark, ptr - mark);
-				ERRTF("TODO"); close(); return;
-			case '+':
-				path.back().append(mark, ptr - mark);
-				path.back().append(1, ' ');
-				if(++ptr == end) goto read_next_chunk;
-				else goto next_path_char;
-			case '%':
-				ERRTF("TODO"); close(); return;
-			default:
-				if(++ptr == end) {
+			for(; ptr < end; ++ptr)
+				switch(*ptr) {
+				case ' ':
+				case '?':
+				case '#':
+				case '\r':
+				case '\n':
+					if(ptr == mark) {
+						if(path.back().empty() && path.size() == 1) {
+							VLTF("empty path"); close(); return; }
+					}
+					else path.back().append(mark, ptr - mark);
+					// EDIT POINT
+					ERRTF("TODO"); close(); return;
+				case '/':
 					path.back().append(mark, ptr - mark);
-					goto read_next_chunk;
+					ERRTF("TODO"); close(); return;
+				case '+':
+					path.back().append(mark, ptr - mark);
+					path.back().append(1, ' ');
+					if(ptr == end1) goto read_next_chunk;
+					break;
+				case '%':
+					ERRTF("TODO"); close(); return;
+				default:
+					if(ptr == end1) {
+						path.back().append(mark, ptr - mark);
+						goto read_next_chunk;
+					}
+					break;
 				}
-				else goto next_path_char;
-			}
 		}
 	}
  read_next_chunk:
