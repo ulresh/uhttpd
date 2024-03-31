@@ -27,22 +27,106 @@ void IncomingConnection::async_start() {
 		close();
 	});
 	buffer.reset(new char[header_buffer_size()]);
-	state = 0; header_size = 0;
+	clear_state();
 	async_read_header();
 }
 
-void IncomingConnection::async_read_header() {
-	socket.async_read_some(ai::buffer(buffer.get(), header_buffer_size()),
+void IncomingConnection::async_read_header(int offset, int mark_offset) {
+	socket.async_read_some(ai::buffer(buffer.get() + offset,
+									  header_buffer_size() - offset),
 			boost::bind(&IncomingConnection::handle_read_header,
-			this, shared_from_this(), ph::error, ph::bytes_transferred));
+						this, shared_from_this(), offset, mark_offset,
+						ph::error, ph::bytes_transferred));
 }
 
+/* method /uri+uri%aburi?name=value&name2=value#anchor proto \r \n
+  0 1    2 3      4 5   6
+   header: value
+     continued value
+
+   data
+ */
+
 void IncomingConnection::handle_read_header(IncomingConnectionShp,
+		int offset, int mark_offset,
 		const error_code& error, std::size_t bytes_transferred) {
 	if(closing || server.closing) return;
 	else if(error) { LOGTF( << LogErr(error)); close(); return; }
 	if(!bytes_transferred) goto read_next_chunk;
-	ERRTF("TODO");
+	{char *mark = buffer.get(), *ptr = mark + offset,
+			*end = ptr + bytes_transferred, *end1 = end - 1;
+	mark += mark_offset;
+	for(; ptr < end; ++ptr)
+		switch(state) {
+		default: VLTF("unknown state:" << state); close(); return;
+		case 0:
+			if(*ptr < 'A' || *ptr > 'Z') {
+				VLTF("bad start char:" << int(*ptr)); close(); return; }
+			++state;
+			if(ptr < end1) ++ptr; else {
+				header_size += bytes_transferred;
+				async_read_header(1);
+				return;
+			}
+		case 1:
+			while(*ptr >= 'A' && *ptr <= 'Z') {
+				if(ptr < end1) ++ptr; else {
+					header_size += bytes_transferred;
+					if(end == buffer.get() + header_buffer_size()) {
+						VLTF("too big method name");
+						close(); return;
+					}
+					async_read_header(end - buffer.get());
+					return;
+				}
+			}
+			if(*ptr == ' ') {
+				method.assign(mark, ptr - mark);
+				++state;
+				if(ptr < end1) ++ptr; else goto read_next_chunk;
+			}
+			else {
+				VLTF("bad method char:" << int(*ptr));
+				close(); return; }
+		case 2:
+			while(*ptr == ' ')
+				if(ptr < end1) ++ptr; else goto read_next_chunk;
+			mark = ptr;
+			path.emplace_back();
+			++state;
+		case 3:
+			for(;; ++ptr)
+				switch(*ptr) {
+				case ' ':
+				case '?':
+				case '#':
+				case '\r':
+				case '\n':
+					if(ptr == mark) {
+						if(path.back().empty() && path.size() == 1) {
+							VLTF("empty path"); close(); return; }
+					}
+					else path.back().append(mark, ptr - mark);
+					ERRTF("TODO"); close(); return;
+				case '/':
+					path.back().append(mark, ptr - mark);
+					ERRTF("TODO"); close(); return;
+				case '+':
+					path.back().append(mark, ptr - mark);
+					path.back().append(1, ' ');
+					if(ptr == end1) goto read_next_chunk;
+					break;
+				case '%':
+					ERRTF("TODO"); close(); return;
+				default:
+					if(ptr == end1) {
+						path.back().append(mark, ptr - mark);
+						goto read_next_chunk;
+					}
+					break;
+				}
+		}
+	}
  read_next_chunk:
 	header_size += bytes_transferred;
 	if(header_size >= server.config.max_request_header_size) {
