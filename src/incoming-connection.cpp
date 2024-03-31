@@ -94,6 +94,7 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 			url.emplace_back();
 			++state;
 		case 3:
+		next_url_char:
 			switch(*ptr) {
 			case ' ':
 			case '?':
@@ -108,10 +109,21 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 				// EDIT POINT
 				ERRTF("TODO"); close(); return;
 			case '/':
-			case '+':
-			case '%':
-			default:
+				url.back().append(mark, ptr - mark);
 				ERRTF("TODO"); close(); return;
+			case '+':
+				url.back().append(mark, ptr - mark);
+				url.back().append(1, ' ');
+				if(++ptr == end) goto read_next_chunk;
+				else goto next_url_char;
+			case '%':
+				ERRTF("TODO"); close(); return;
+			default:
+				if(++ptr == end) {
+					url.back().append(mark, ptr - mark);
+					goto read_next_chunk;
+				}
+				else goto next_url_char;
 			}
 		}
 	}
