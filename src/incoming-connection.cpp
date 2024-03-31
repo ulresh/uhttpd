@@ -40,7 +40,7 @@ void IncomingConnection::async_read_header(int offset, int mark_offset) {
 }
 
 /* method /uri+uri%aburi?name=value&name2=value#anchor proto \r \n
-  0 1    2 3      4     5
+  0 1    2 3      4 5   6
    header: value
      continued value
 
@@ -95,7 +95,7 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 			path.emplace_back();
 			++state;
 		case 3:
-			for(; ptr < end; ++ptr)
+			for(;; ++ptr)
 				switch(*ptr) {
 				case ' ':
 				case '?':
@@ -107,7 +107,6 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 							VLTF("empty path"); close(); return; }
 					}
 					else path.back().append(mark, ptr - mark);
-					// EDIT POINT
 					ERRTF("TODO"); close(); return;
 				case '/':
 					path.back().append(mark, ptr - mark);
