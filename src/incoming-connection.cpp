@@ -83,7 +83,7 @@ void IncomingConnection::handle_read_header(
 			}
 		}
 	switch(state) {
-	default: close(); return;
+	default: VLTF("bad end buffer state:" << state); close(); return;
 	}
  read_next_chunk:
 	header_size += bytes_transferred;
