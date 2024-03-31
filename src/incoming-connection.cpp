@@ -53,8 +53,8 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 	if(closing || server.closing) return;
 	else if(error) { LOGTF( << LogErr(error)); close(); return; }
 	if(!bytes_transferred) goto read_next_chunk;
-	char *mark = buffer.get(), *ptr = mark + offset,
-		*end = ptr + bytes_transferred, *end1 = end - 1;
+	{char *mark = buffer.get(), *ptr = mark + offset,
+			*end = ptr + bytes_transferred, *end1 = end - 1;
 	mark += mark_offset;
 	for(; ptr < end; ++ptr)
 		switch(state) {
@@ -114,6 +114,7 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 				ERRTF("TODO"); close(); return;
 			}
 		}
+	}
  read_next_chunk:
 	header_size += bytes_transferred;
 	if(header_size >= server.config.max_request_header_size) {
