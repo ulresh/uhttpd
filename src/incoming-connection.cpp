@@ -53,7 +53,6 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 	if(closing || server.closing) return;
 	else if(error) { LOGTF( << LogErr(error)); close(); return; }
 	if(!bytes_transferred) goto read_next_chunk;
-	header_size += bytes_transferred;
 	{char *mark = buffer.get(), *ptr = mark + offset,
 			*end = ptr + bytes_transferred, *end1 = end - 1;
 	mark += mark_offset;
@@ -168,6 +167,7 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 	}
  read_next_chunk:
 #define CHECK_HEADER_SIZE(r) \
+	header_size += bytes_transferred; \
 	if(header_size >= server.config.max_request_header_size) { \
 		LOGTF("too big header size:" << header_size); \
 		close(); return r; }
