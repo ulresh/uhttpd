@@ -178,20 +178,21 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 bool IncomingConnection::parsed_string_append(std::string &s,
 			const char *mark, const char *end) {
 	if(auto size = end - mark) {
-		if(size > header_buffer_size() / 2 ||
-		   size <= s.capacity() - s.size()) {
+		auto start = buffer.get();
+		if(end - start <= header_buffer_size() / 4 * 3) {
+			CHECK_HEADER_SIZE(false);
+			async_read_header(end - start, mark - start);
+			return false;
+		}
+		else if(size > header_buffer_size() / 2 ||
+				size <= s.capacity() - s.size()) {
 			s.append(mark, size);
 			return true;
 		}
 		else {
 			CHECK_HEADER_SIZE(false);
-			auto start = buffer.get();
-			if(end - start <= header_buffer_size() / 4 * 3)
-				async_read_header(end - start, mark - start);
-			else {
-				memcpy(start, mark, size);
-				async_read_header(size);
-			}
+			memcpy(start, mark, size);
+			async_read_header(size);
 			return false;
 		}
 	}
