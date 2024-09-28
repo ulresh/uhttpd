@@ -63,6 +63,7 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 			*end = ptr + bytes_transferred, *end1 = end - 1;
 	mark += mark_offset;
 	for(; ptr < end; ++ptr)
+	retry:
 		switch(state) {
 		default: VLTF("unknown state:" << state); close(); return;
 		case 0:
@@ -123,7 +124,10 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 					if(ptr == end1) goto read_next_chunk;
 					break;
 				case '%':
-					ERRTF("TODO"); close(); return;
+					path.back().append(mark, ptr - mark);
+					up_state = state; state = 4;
+					if(ptr == end1) goto read_next_chunk;
+					else { ++ptr; goto state_4; }
 				default:
 					if(ptr == end1) {
 						CHECK_HEADER_SIZE;
@@ -132,6 +136,39 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 					}
 					break;
 				}
+		case 4:
+		state_4:
+#define BAD VLTF("bad char in hex code:" << LogChar(*ptr)); close(); return;
+			{	auto c = *ptr;
+				if(c < '0') {BAD}
+				else if(c <= '9') decoded_char = (c - '0') << 4;
+				else if(c < 'A') {BAD}
+				else if(c <= 'F') decoded_char = (c - 'A' + 10) << 4;
+				else if(c < 'a') {BAD}
+				else if(c <= 'f') decoded_char = (c - 'a' + 10) << 4;
+				else {BAD}
+			}
+			++state;
+			if(ptr == end1) goto read_next_chunk;
+			++ptr;
+		case 5:
+			{	auto c = *ptr;
+				if(c < '0') {BAD}
+				else if(c <= '9') decoded_char += c - '0';
+				else if(c < 'A') {BAD}
+				else if(c <= 'F') decoded_char += c - 'A' + 10;
+				else if(c < 'a') {BAD}
+				else if(c <= 'f') decoded_char += c - 'a' + 10;
+				else {BAD}
+			}
+			state = up_state;
+			switch(state) {
+			default: VLTF("bad state:" << state); close(); return;
+			case 3: path.back().append(1, decoded_char); break;
+			}
+			if(ptr == end1) goto read_next_chunk;
+			else { ++ptr; goto retry; }
+#undef BAD
 		}
 	}
  read_next_chunk:
