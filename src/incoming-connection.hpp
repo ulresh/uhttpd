@@ -68,7 +68,7 @@ struct IncomingConnection :
 							int offset, int mark_offset,
 							const error_code& error,
 							std::size_t bytes_transferred);
-	bool parsed_string_append(std::string &s,
+	void parsed_string_append(std::string &s,
 							  const char *mark, const char *end);
 	bool path_slice() { return true; }
 	bool path_finish() { request.reset(new RequestStrMap); return true; }
