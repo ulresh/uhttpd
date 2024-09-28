@@ -61,7 +61,7 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 		default: VLTF("unknown state:" << state); close(); return;
 		case 0:
 			if(*ptr < 'A' || *ptr > 'Z') {
-				VLTF("bad start char:" << int(*ptr)); close(); return; }
+				VLTF("bad start char:" << LogChar(*ptr)); close(); return; }
 			++state;
 			if(ptr < end1) ++ptr; else {
 				header_size += bytes_transferred;
@@ -86,7 +86,7 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 				if(ptr < end1) ++ptr; else goto read_next_chunk;
 			}
 			else {
-				VLTF("bad method char:" << int(*ptr));
+				VLTF("bad method char:" << LogChar(*ptr));
 				close(); return; }
 		case 2:
 			while(*ptr == ' ')
