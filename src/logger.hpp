@@ -74,6 +74,15 @@ inline std::ostream & operator << (std::ostream &out, ErrNo) {
 	return out;
 }
 
+struct LogChar {
+	LogChar(int c) : c(c) {}
+	int c;
+};
+inline std::ostream & operator << (std::ostream &out, LogChar c) {
+	if(isprint(c.c) && !isspace(c.c)) out << (char)c.c;
+	return out << std::hex << std::setfill('0') << std::setw(2) << c.c;
+}
+
 /*
  * Local Variables:
  * mode: c++
