@@ -47,6 +47,12 @@ void IncomingConnection::async_read_header(int offset, int mark_offset) {
    data
  */
 
+#define CHECK_HEADER_SIZE \
+	header_size += bytes_transferred; \
+	if(header_size >= server.config.max_request_header_size) { \
+		LOGTF("too big header size:" << header_size); \
+		close(); return; }
+
 void IncomingConnection::handle_read_header(IncomingConnectionShp,
 		int offset, int mark_offset,
 		const error_code& error, std::size_t bytes_transferred) {
@@ -124,9 +130,9 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 					else { ++ptr; goto state_4; }
 				default:
 					if(ptr == end1) {
-						if(parsed_string_append(path.back(), mark, end))
-							goto read_next_chunk;
-						else return;
+						CHECK_HEADER_SIZE;
+						parsed_string_append(path.back(), mark, end);
+						return;
 					}
 					break;
 				}
@@ -166,37 +172,29 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 		}
 	}
  read_next_chunk:
-#define CHECK_HEADER_SIZE(r) \
-	header_size += bytes_transferred; \
-	if(header_size >= server.config.max_request_header_size) { \
-		LOGTF("too big header size:" << header_size); \
-		close(); return r; }
-	CHECK_HEADER_SIZE();
+	CHECK_HEADER_SIZE;
 	async_read_header();
 }
 
-bool IncomingConnection::parsed_string_append(std::string &s,
+void IncomingConnection::parsed_string_append(std::string &s,
 			const char *mark, const char *end) {
 	if(auto size = end - mark) {
 		auto start = buffer.get();
 		if(end - start <= header_buffer_size() / 4 * 3) {
-			CHECK_HEADER_SIZE(false);
 			async_read_header(end - start, mark - start);
-			return false;
+			return;
 		}
 		else if(size > header_buffer_size() / 2 ||
 				size <= s.capacity() - s.size()) {
 			s.append(mark, size);
-			return true;
 		}
 		else {
-			CHECK_HEADER_SIZE(false);
 			memcpy(start, mark, size);
 			async_read_header(size);
-			return false;
+			return;
 		}
 	}
-	else return true;
+	async_read_header();
 }
 
 /*
