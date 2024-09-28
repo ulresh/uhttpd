@@ -34,6 +34,7 @@ struct IncomingConnection :
 	std::string method, proto;
 	std::list<std::string> path;
 	bool keep_alive;
+	int decoded_char;
 };
 
 inline std::ostream & operator << (std::ostream &out,
