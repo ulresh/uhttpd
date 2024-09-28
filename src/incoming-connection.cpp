@@ -120,7 +120,7 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 					ERRTF("TODO"); close(); return;
 				default:
 					if(ptr == end1) {
-						path.back().append(mark, ptr - mark);
+						path.back().append(mark, end - mark);
 						goto read_next_chunk;
 					}
 					break;
