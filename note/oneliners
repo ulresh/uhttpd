@@ -3,3 +3,6 @@
 git tag -a lesson02.1 -m _; git push origin --tags
 (t=lesson02.1; git tag -d $t; git push t1 --delete $t; git tag -a $t -m _; git push t1 $t)
 (t=lesson02.1; git tag -d $t; git push t1 --delete $t; git push origin --delete $t; git tag -a $t -m _; git push origin $t)
+
+find -name '*~' -print -delete
+git commit -a -m _; echo; git push; echo; git status

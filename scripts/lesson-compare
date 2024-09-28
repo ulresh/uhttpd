@@ -35,7 +35,7 @@ else {
 my($errors,$code,$prev_lesson_step);
 xopen my($lesson), '<', "lesson/$lesson_number.md";
 while(defined(my $line = <$lesson>)) {
-    while($line =~ /\[(.*?)\]\(.*?\),\s*\[посмотреть\s+отличия\]\(\/..\/..\/compare\/(c\d\d\d[a-z]?)..(c\d\d\d[a-z])\)/g) {
+    while($line =~ /\[([^\]]*)\]\([^\)]*\),\s*\[посмотреть\s+отличия\]\(\/..\/..\/compare\/(c\d\d\d[a-z]?)..(c\d\d\d[a-z])\)/g) {
 	my($file,$t1,$t2) = ($1,$2,$3);
 	# warn eval dw qw($file $t1 $t2);
 	my $s1 = substr $t1, 0, 4;
