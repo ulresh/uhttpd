@@ -4,6 +4,52 @@
 
 struct IncomingConnection :
 	std::enable_shared_from_this<IncomingConnection> {
+
+	struct VarValue {
+		virtual void append(const char *ptr, std::size_t size) {}
+		virtual void finish() {}
+	};
+
+	struct VarList {
+		virtual VarValue *start(const std::string &name) {
+			return new VarValue; }
+	};
+
+	struct Request {
+		std::unique_ptr<VarList> query, headers, data;
+	};
+
+	struct VarStr {
+		std::string name, value;
+	};
+
+	struct VarValueStrRef : VarValue {
+		VarValueStrRef(std::string &value) : value(value) {}
+		void append(const char *ptr, std::size_t size) override {
+			value.append(ptr, size);
+		}
+		std::string &value;
+	};
+
+	struct VarStrMap : VarList {
+		std::map<std::string, VarStr> map;
+		VarValue *start(const std::string &name) override {
+			auto key = name;
+			boost::to_lower(key);
+			auto &r = map[key];
+			r.name = name;
+			return new VarValueStrRef(r.value);
+		}
+	};
+
+	struct RequestStrMap : Request {
+		RequestStrMap() {
+			query.reset(new VarStrMap);
+			headers.reset(new VarStrMap);
+			data.reset(new VarStrMap);
+		}
+	};
+
 	IncomingConnection(Server &server);
 	void close();
 	void async_start();
@@ -24,6 +70,8 @@ struct IncomingConnection :
 							std::size_t bytes_transferred);
 	void parsed_string_append(std::string &s,
 							  const char *mark, const char *end);
+	bool path_slice() { return true; }
+	bool path_finish() { request.reset(new RequestStrMap); return true; }
 	Server &server;
 	tcp::socket socket;
 	bool closing = false;
@@ -35,6 +83,9 @@ struct IncomingConnection :
 	std::list<std::string> path;
 	bool keep_alive;
 	int decoded_char;
+	std::unique_ptr<Request> request;
+	std::string var_name;
+	std::unique_ptr<VarValue> var_value;
 };
 
 inline std::ostream & operator << (std::ostream &out,
