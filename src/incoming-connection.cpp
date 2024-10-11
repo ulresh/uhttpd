@@ -103,10 +103,11 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 			++state;
 		case 3:
 			for(;; ++ptr)
+			retry_path:
 				switch(*ptr) {
-				case ' ':
 				case '?':
 				case '#':
+				case ' ':
 				case '\r':
 				case '\n':
 					if(ptr == mark) {
@@ -114,10 +115,28 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 							VLTF("empty path"); close(); return; }
 					}
 					else path.back().append(mark, ptr - mark);
-					ERRTF("TODO"); close(); return;
+					if(!path_finish()) return;
+					switch(*ptr) {
+					default:
+						VLTF("bad algorithm char:" << LogChar(*ptr));
+						close(); return;
+					case '?':
+						state = 6;
+						if(ptr == end1) goto read_next_chunk;
+						else { ++ptr; goto state_6; }
+					case '#':
+					case ' ':
+					case '\r':
+					case '\n':
+						ERRTF("TODO"); close(); return;
+					}
 				case '/':
 					path.back().append(mark, ptr - mark);
-					ERRTF("TODO"); close(); return;
+					if(!path_slice()) return;
+					path.emplace_back();
+					if(ptr == end1) goto read_next_chunk;
+					mark = ++ptr;
+					goto retry_path;
 				case '+':
 					path.back().append(mark, ptr - mark);
 					path.back().append(1, ' ');
@@ -169,6 +188,9 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 			if(ptr == end1) goto read_next_chunk;
 			else { ++ptr; goto retry; }
 #undef BAD
+		case 6:
+		state_6:
+			ERRTF("TODO"); close(); return;
 		}
 	}
  read_next_chunk:
