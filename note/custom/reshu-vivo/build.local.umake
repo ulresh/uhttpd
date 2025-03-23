@@ -1,0 +1,20 @@
+#include <umake/custom.hpp>
+
+void build_umake(Custom &custom) {
+	custom.libraries.clear();
+	custom.add_library("uring");
+	custom.add_library("dl");
+	custom.add_system_include_path("/usr/local/share/boost_1_87/include");
+	custom.add_library_file(
+		"/usr/local/share/boost_1_87/lib/libboost_filesystem.a");
+	custom.add_library_file(
+		"/usr/local/share/boost_1_87/lib/libboost_system.a");
+}
+
+/*
+ * Local Variables:
+ * mode: c++
+ * coding: utf-8-unix
+ * tab-width: 4
+ * End:
+ */
