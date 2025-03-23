@@ -26,7 +26,7 @@ void Logger::File::reopen(const std::string &filepath) {
 }
 
 void Logger::File::post(TextShp text) {
-	if(iosp) iosp->post(boost::bind(&File::write, this, text));
+	if(iosp) ai::post(*iosp, boost::bind(&File::write, this, text));
 	else write(text); // предполагаем, что open для всех журналов вызывается до создания тредов, так что пока мы работаем только в одном треде.
 }
 
