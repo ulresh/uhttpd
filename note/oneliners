@@ -6,3 +6,7 @@ git tag -a lesson02.1 -m _; git push origin --tags
 
 find -name '*~' -print -delete
 git commit -a -m _; echo; git push; echo; git status
+
+cd src; ../../umake/bin/umake; cd ..
+
+bin/uhttpd conf/uhttpd.config
