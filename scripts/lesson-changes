@@ -36,7 +36,7 @@ while(defined(my $file = <$changes>)) {
 	my $file = shift;
 	my $prev = $char;
 	if($char) { ++$char; } else { $char = 'a'; }
-	print "Файл [$file](/../$tag2/$file), [посмотреть отличия](/../../compare/$cn$prev..$cn$char).\n";
+	print "Файл [$file](/../$tag2/$file) ([посмотреть отличия](/../../compare/$cn$prev..$cn$char)).\n";
     };
     if('.cpp' eq substr $file, -4) {
 	$play->($cpp_file) if $cpp_file;
