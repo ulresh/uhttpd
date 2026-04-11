@@ -123,7 +123,17 @@ void Server::load_config(const char *config_filename) {
 	else Logger::n.open(ios, config.log.n)
 	TUNE_LOG(err); TUNE_LOG(out); TUNE_LOG(access);
 #undef TUNE_LOG
-	LOG(out) "listen:" << config.listen_endpoint;
+	if(config.ip.empty()) listen_endpoint.address(ip::address_v4::any());
+	else {
+		error_code ec;
+		listen_endpoint.address(ip::make_address(config.ip, ec));
+		if(ec) {
+			cerr << "bad ip:" << config.ip << LogErr(ec) << endl;
+			exit(1);
+		}
+	}
+	listen_endpoint.port(config.port);
+	LOG(out) "listen:" << listen_endpoint;
 }
 
 void Server::async_start() {
@@ -131,7 +141,7 @@ void Server::async_start() {
 	sigterm.async_wait(boost::bind(&Server::sigterm_handler,
 								   this, ph::error));
 	Acceptor *p;
-	acceptor.reset(p = new Acceptor(*this, config.listen_endpoint));
+	acceptor.reset(p = new Acceptor(*this, listen_endpoint));
 	p->async_accept();
 }
 

@@ -20,7 +20,7 @@ void IncomingConnection::close() {
 void IncomingConnection::async_start() {
 	auto h = shared_from_this();
 	anchor = server.incomings.insert(server.incomings.end(), h);
-	timer.expires_from_now(server.config.request_timeout);
+	timer.expires_from_now(seconds(server.config.request_timeout_seconds));
 	timer.async_wait([h,this](const error_code &error) -> void {
 		if(closing || server.closing || error) return;
 		LOGTF("request_timeout");

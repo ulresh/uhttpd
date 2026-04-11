@@ -17,6 +17,7 @@ struct Server {
 	bp::filesystem::path cc;
 	umake::Custom umake_custom;
 	Config config;
+	tcp::endpoint listen_endpoint;
 	io_context ios;
 	bool closing = false;
 	ai::signal_set sighup, sigterm;
