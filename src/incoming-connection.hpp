@@ -68,8 +68,27 @@ struct IncomingConnection :
 							int offset, int mark_offset,
 							const error_code& error,
 							std::size_t bytes_transferred);
-	void parsed_string_append(std::string &s,
-							  const char *mark, const char *end);
+	template<typename S>
+	void parsed_string_append(S &s,
+							  const char *mark, const char *end) {
+		if(auto size = end - mark) {
+			auto start = buffer.get();
+			if(end - start <= header_buffer_size() / 4 * 3) {
+				async_read_header(end - start, mark - start);
+				return;
+			}
+			else if(size > header_buffer_size() / 2 ||
+					size <= s.capacity() - s.size()) {
+				s.append(mark, size);
+			}
+			else {
+				memcpy(start, mark, size);
+				async_read_header(size);
+				return;
+			}
+		}
+		async_read_header();
+	}
 	bool path_slice() { return true; }
 	bool path_finish() { request.reset(new RequestStrMap); return true; }
 	Server &server;

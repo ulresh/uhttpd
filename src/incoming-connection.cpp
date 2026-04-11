@@ -39,19 +39,50 @@ void IncomingConnection::async_read_header(int offset, int mark_offset) {
 						ph::error, ph::bytes_transferred));
 }
 
-/* method /uri+uri%aburi?name=value&name2=value#anchor proto \r \n
-  0 1    2 3      4 5   6
-   header: value
-     continued value
-
-   data
- */
-
 #define CHECK_HEADER_SIZE \
 	header_size += bytes_transferred; \
 	if(header_size >= server.config.max_request_header_size) { \
 		LOGTF("too big header size:" << header_size); \
 		close(); return; }
+
+#define DEFAULT_STRING(s) \
+	if(ptr == end1) { \
+		CHECK_HEADER_SIZE; \
+		parsed_string_append(s, mark, end); \
+		return; \
+	} \
+	break
+
+#define SPACE_CODE(s) \
+	(s).append(mark, ptr - mark); \
+	(s).append(1, ' '); \
+	if(ptr == end1) goto read_next_chunk; \
+	break
+
+#define HEX_CODE(s) \
+	(s).append(mark, ptr - mark); \
+	up_state = state; state = 4; \
+	if(ptr == end1) goto read_next_chunk; \
+	++ptr; goto state_4
+
+#define DECODED_CHAR(s,l) \
+	(s).append(1, decoded_char); \
+	if(ptr == end1) goto read_next_chunk; \
+	mark = ++ptr; goto l
+
+/* method /uri+uri%aburi?name=value&name2=value#fragment proto/1.1     \r \n
+  0 1    2 3      4 5   6    7     6           8        9 10  11 12 13 14
+   header: value
+ 15 16   17 18
+     continued value
+ 19 17
+   header: value
+ 19 16   17 18
+     continued value
+    17
+   data
+ 20
+ */
 
 void IncomingConnection::handle_read_header(IncomingConnectionShp,
 		int offset, int mark_offset,
@@ -137,23 +168,9 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 					if(ptr == end1) goto read_next_chunk;
 					mark = ++ptr;
 					goto retry_path;
-				case '+':
-					path.back().append(mark, ptr - mark);
-					path.back().append(1, ' ');
-					if(ptr == end1) goto read_next_chunk;
-					break;
-				case '%':
-					path.back().append(mark, ptr - mark);
-					up_state = state; state = 4;
-					if(ptr == end1) goto read_next_chunk;
-					else { ++ptr; goto state_4; }
-				default:
-					if(ptr == end1) {
-						CHECK_HEADER_SIZE;
-						parsed_string_append(path.back(), mark, end);
-						return;
-					}
-					break;
+				case '+': SPACE_CODE(path.back());
+				case '%': HEX_CODE(path.back());
+				default: DEFAULT_STRING(path.back());
 				}
 		case 4:
 		state_4:
@@ -183,10 +200,8 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 			state = up_state;
 			switch(state) {
 			default: VLTF("bad state:" << state); close(); return;
-			case 3: path.back().append(1, decoded_char); break;
+			case 3: DECODED_CHAR(path.back(), retry_path);
 			}
-			if(ptr == end1) goto read_next_chunk;
-			else { ++ptr; goto retry; }
 #undef BAD
 		case 6:
 		state_6:
@@ -195,27 +210,6 @@ void IncomingConnection::handle_read_header(IncomingConnectionShp,
 	}
  read_next_chunk:
 	CHECK_HEADER_SIZE;
-	async_read_header();
-}
-
-void IncomingConnection::parsed_string_append(std::string &s,
-			const char *mark, const char *end) {
-	if(auto size = end - mark) {
-		auto start = buffer.get();
-		if(end - start <= header_buffer_size() / 4 * 3) {
-			async_read_header(end - start, mark - start);
-			return;
-		}
-		else if(size > header_buffer_size() / 2 ||
-				size <= s.capacity() - s.size()) {
-			s.append(mark, size);
-		}
-		else {
-			memcpy(start, mark, size);
-			async_read_header(size);
-			return;
-		}
-	}
 	async_read_header();
 }
 
